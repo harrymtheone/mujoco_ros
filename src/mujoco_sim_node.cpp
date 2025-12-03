@@ -184,10 +184,15 @@ private:
             RCLCPP_WARN(this->get_logger(), "Base body not found, using body ID 1");
         }
 
-        // Find IMU sensors if exist
+        // Find IMU sensors
         imu_sensor_id_ = mj_name2id(model_, mjOBJ_SENSOR, "imu_quat");
         gyro_sensor_id_ = mj_name2id(model_, mjOBJ_SENSOR, "imu_gyro");
         accel_sensor_id_ = mj_name2id(model_, mjOBJ_SENSOR, "imu_accel");
+
+        if (imu_sensor_id_ < 0 || gyro_sensor_id_ < 0 || accel_sensor_id_ < 0) {
+            RCLCPP_ERROR(this->get_logger(), "Required IMU sensors not found. Please ensure 'imu_quat', 'imu_gyro', and 'imu_accel' are defined in the model.");
+            return false;
+        }
 
         mj_resetData(model_, data_);
         mj_forward(model_, data_);
@@ -476,25 +481,24 @@ private:
         imu_msg.header.stamp = now;
         imu_msg.header.frame_id = "base_link";
 
-        if (base_body_id_ >= 0) {
-            int quat_adr = base_body_id_ * 4;
-            imu_msg.orientation.w = data_->xquat[quat_adr];
-            imu_msg.orientation.x = data_->xquat[quat_adr + 1];
-            imu_msg.orientation.y = data_->xquat[quat_adr + 2];
-            imu_msg.orientation.z = data_->xquat[quat_adr + 3];
+        // Orientation from sensor
+        if (imu_sensor_id_ >= 0) {
+            int adr = model_->sensor_adr[imu_sensor_id_];
+            imu_msg.orientation.w = data_->sensordata[adr];
+            imu_msg.orientation.x = data_->sensordata[adr + 1];
+            imu_msg.orientation.y = data_->sensordata[adr + 2];
+            imu_msg.orientation.z = data_->sensordata[adr + 3];
         }
 
+        // Angular velocity from sensor
         if (gyro_sensor_id_ >= 0) {
             int adr = model_->sensor_adr[gyro_sensor_id_];
             imu_msg.angular_velocity.x = data_->sensordata[adr];
             imu_msg.angular_velocity.y = data_->sensordata[adr + 1];
             imu_msg.angular_velocity.z = data_->sensordata[adr + 2];
-        } else {
-            imu_msg.angular_velocity.x = data_->qvel[3];
-            imu_msg.angular_velocity.y = data_->qvel[4];
-            imu_msg.angular_velocity.z = data_->qvel[5];
         }
 
+        // Linear acceleration from sensor
         if (accel_sensor_id_ >= 0) {
             int adr = model_->sensor_adr[accel_sensor_id_];
             imu_msg.linear_acceleration.x = data_->sensordata[adr];
