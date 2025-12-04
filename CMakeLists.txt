@@ -14,13 +14,7 @@ find_package(std_srvs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
-
-# Generate message interfaces
-rosidl_generate_interfaces(${PROJECT_NAME}
-    "msg/JointControlCmd.msg"
-    DEPENDENCIES std_msgs
-)
+find_package(mujoco_ros_msgs REQUIRED)
 
 # Find MuJoCo manually
 # Use MUJOCO_ROOT_DIR environment variable
@@ -89,11 +83,8 @@ ament_target_dependencies(mujoco_sim_node
     sensor_msgs
     geometry_msgs
     nav_msgs
+    mujoco_ros_msgs
 )
-
-# Link to generated messages
-rosidl_get_typesupport_target(cpp_typesupport_target ${PROJECT_NAME} rosidl_typesupport_cpp)
-target_link_libraries(mujoco_sim_node "${cpp_typesupport_target}")
 
 # Install executable
 install(TARGETS mujoco_sim_node
@@ -111,8 +102,5 @@ install(DIRECTORY config
     DESTINATION share/${PROJECT_NAME}
     OPTIONAL
 )
-
-# Export message interfaces
-ament_export_dependencies(rosidl_default_runtime)
 
 ament_package()

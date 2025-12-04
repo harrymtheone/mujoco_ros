@@ -16,7 +16,7 @@
 #include <std_srvs/srv/empty.hpp>
 #include <std_srvs/srv/set_bool.hpp>
 
-#include "mujoco_ros/msg/joint_control_cmd.hpp"
+#include "mujoco_ros_msgs/msg/joint_control_cmd.hpp"
 
 #include <mujoco/mujoco.h>
 #include <GLFW/glfw3.h>
@@ -100,7 +100,7 @@ public:
             "/mujoco/odom", 10);
 
         // Subscriber for combined joint control command
-        joint_cmd_sub_ = this->create_subscription<mujoco_ros::msg::JointControlCmd>(
+        joint_cmd_sub_ = this->create_subscription<mujoco_ros_msgs::msg::JointControlCmd>(
             "/mujoco/joint_cmd", 10,
             std::bind(&MujocoSimNode::jointCmdCallback, this, std::placeholders::_1));
 
@@ -539,7 +539,7 @@ private:
     }
 
     // Combined joint command callback
-    void jointCmdCallback(const mujoco_ros::msg::JointControlCmd::SharedPtr msg) {
+    void jointCmdCallback(const mujoco_ros_msgs::msg::JointControlCmd::SharedPtr msg) {
         std::lock_guard<std::mutex> lock(cmd_mutex_);
         
         if (!msg->position.empty()) {
@@ -638,7 +638,7 @@ private:
     rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
 
     // Subscribers
-    rclcpp::Subscription<mujoco_ros::msg::JointControlCmd>::SharedPtr joint_cmd_sub_;
+    rclcpp::Subscription<mujoco_ros_msgs::msg::JointControlCmd>::SharedPtr joint_cmd_sub_;
 
     // Services
     rclcpp::Service<std_srvs::srv::SetBool>::SharedPtr pause_srv_;
